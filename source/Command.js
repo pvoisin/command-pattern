@@ -3,33 +3,34 @@ var Observable = require("./Observable");
 
 
 function Command(name) {
-	Observable.call(this);
+	var self = this, own = self;
+
+	Observable.call(self);
 
 	if(typeof name !== "string") {
 		throw new Error("Invalid name!");
 	}
 
-	var self = this, own = self.own = {
-		name: name,
-		implementation: Command.prototype.implementation,
-		executionCount: 0
-	};
-
-	Object.defineProperty(self, "implementation", {
-		set: function(implementation) {
-			own.implementation = implementation;
-		}
-	});
+	own.name = name;
+	own.executionCount = 0;
 }
 
 inherit(Command, Observable);
 
+// If callback isn't specified, the command is supposed to be synchronous.
+Command.prototype.execute = function execute(/*parameters, ..., callback*/) {
+	var self = this, own = self;
 
-Command.prototype.execute = function execute(parameters, callback) {
-	var self = this, own = self.own;
-
-	callback = typeof parameters === "function" ? parameters : callback;
-	parameters = (parameters === callback) ? {} : parameters;
+	var synchronously = false;
+	var lastParameter = arguments[arguments.length - 1];
+	if(typeof lastParameter === "function") {
+		var callback = lastParameter;
+		var parameters = Array.prototype.slice.call(arguments, 0, -1);
+	}
+	else {
+		synchronously = true;
+		parameters = Array.prototype.slice.call(arguments);
+	}
 
 	own.executionCount++;
 
@@ -45,15 +46,45 @@ Command.prototype.execute = function execute(parameters, callback) {
 		throw new Error("Not implemented!");
 	}
 
-	implementation.call(execution, parameters, function(error/*, results*/) {
-		var parameters = Array.prototype.slice.call(arguments);
-
-		if(error) {
-			return self.emitAndCall.apply(self, ["error", callback].concat(parameters));
+	if(synchronously) {
+		try {
+			var results = implementation.apply(execution, parameters);
+			setImmediate(function() {
+				succeed(results);
+			});
+			return results;
 		}
+		catch(error) {
+			setImmediate(function() {
+				fail(error);
+			});
+			throw error;
+		}
+	}
+	else {
+		var callbackWrapper = function(error/*, results*/) {
+			var parameters = Array.prototype.slice.call(arguments);
 
-		return self.emitAndCall.apply(self, ["executed", callback].concat(parameters.slice(1)));
-	});
+			if(error) {
+				fail.apply(self, parameters);
+			}
+			else {
+				succeed.apply(self, parameters.slice(1));
+			}
+		};
+
+		callbackWrapper.wrappedCallback = callback;
+
+		implementation.apply(execution, parameters.concat(callbackWrapper));
+	}
+
+	function succeed(/*results...*/) {
+		self.emitAndCall.apply(self, ["executed", callback].concat(Array.prototype.slice.call(arguments)));
+	}
+
+	function fail(error/*, results...*/) {
+		self.emitAndCall.apply(self, ["error", callback].concat(Array.prototype.slice.call(arguments)));
+	}
 };
 
 

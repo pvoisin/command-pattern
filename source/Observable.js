@@ -20,7 +20,7 @@ Observable.prototype.emitAndCall = function emitAndCall(event, callback) {
 	});
 
 	// EventEmitter#[emit](https://github.com/joyent/node/blob/v0.10.39/lib/events.js#L53) returns true or false.
-	return self.emit.apply(self, [event].concat(Array.prototype.slice.call(arguments, (2))));
+	return self.emit.apply(self, [event].concat(Array.prototype.slice.call(arguments, 2)));
 };
 
 
