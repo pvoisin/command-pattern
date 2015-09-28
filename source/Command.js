@@ -39,7 +39,13 @@ Command.prototype.execute = function execute(parameters, callback) {
 		parameters: parameters
 	};
 
-	own.implementation.call(execution, parameters, function(error/*, results*/) {
+	var implementation = own.implementation || self.constructor.prototype.implementation;
+
+	if(!implementation) {
+		throw new Error("Not implemented!");
+	}
+
+	implementation.call(execution, parameters, function(error/*, results*/) {
 		var parameters = Array.prototype.slice.call(arguments);
 
 		if(error) {
@@ -48,10 +54,6 @@ Command.prototype.execute = function execute(parameters, callback) {
 
 		return self.emitAndCall.apply(self, ["executed", callback].concat(parameters.slice(1)));
 	});
-};
-
-Command.prototype.implementation = function(parameters, callback) {
-	callback(new Error("Not implemented!"));
 };
 
 

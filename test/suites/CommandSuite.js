@@ -13,7 +13,7 @@ describe("Command", function() {
 	});
 
 	describe("#execute", function() {
-		it("should raise an error if not implemented", function(proceed) {
+		it("should raise an error if not implemented", function() {
 			var command = new Command("???");
 
 			var observers = {
@@ -26,24 +26,17 @@ describe("Command", function() {
 			command.on("error", observers["error"]);
 			command.on("executed", observers["executed"]);
 
-			var callback = spy(function(error) {
-				process.nextTick(finalize);
-			});
+			var callback = spy();
 
-			command.execute(callback);
+			expect(function() {
+				command.execute(callback);
+			}).to.throwError(/^Not implemented/, function(error) {
+					console.error(error.stack);
+				});
 
-			function finalize() {
-				expect(callback.callCount).to.be(1);
-				expect(callback.args[0][0]).to.be.an(Error);
-				expect(callback.args[0][0].message).to.be("Not implemented!");
-
-				expect(observers["executed"].callCount).to.be(0);
-				expect(observers["error"].args[0][0]).to.be(callback.args[0][0]);
-
-				proceed();
-			}
-
-			this.timeout(100);
+			expect(callback.callCount).to.be(0);
+			expect(observers["executed"].callCount).to.be(0);
+			expect(observers["error"].callCount).to.be(0);
 		});
 
 		it("should emit the \"executed\" and call the provided callback", function(proceed) {
