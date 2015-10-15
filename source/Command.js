@@ -34,8 +34,7 @@ Command.prototype.execute = function execute(/*parameters, ..., callback*/) {
 
 	own.executionCount++;
 
-	var execution = {
-		command: self,
+	var context = {
 		occurrence: own.executionCount,
 		parameters: parameters
 	};
@@ -46,9 +45,11 @@ Command.prototype.execute = function execute(/*parameters, ..., callback*/) {
 		throw new Error("Not implemented!");
 	}
 
+	own.implementation.context = context;
+
 	if(synchronously) {
 		try {
-			var results = implementation.apply(execution, parameters);
+			var results = implementation.apply(self, parameters);
 			setImmediate(function() {
 				succeed(results);
 			});
@@ -75,7 +76,7 @@ Command.prototype.execute = function execute(/*parameters, ..., callback*/) {
 
 		callbackWrapper.wrappedCallback = callback;
 
-		implementation.apply(execution, parameters.concat(callbackWrapper));
+		implementation.apply(self, parameters.concat(callbackWrapper));
 	}
 
 	function succeed(/*results...*/) {

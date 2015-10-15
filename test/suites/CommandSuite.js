@@ -230,7 +230,10 @@ describe("Command", function() {
 				command.on("error", observers["error"]);
 				command.on("executed", observers["executed"]);
 
-				var callback = spy(function(error) {
+				var contexts = [];
+
+				var callback = spy(function() {
+					contexts.push(command.implementation.context);
 					process.nextTick(finalize);
 				});
 
@@ -315,9 +318,12 @@ describe("Command", function() {
 
 				command.on("error", observers["error"]);
 
-				var callback = spy(y.debounce(function() {
+				var contexts = [];
+
+				var callback = spy(function() {
+					contexts.push(command.implementation.context);
 					process.nextTick(finalize);
-				}, 100));
+				});
 
 				var sample = ["P", 4, "R", 4, "M", 3, "T", 3, "R", "S"];
 
@@ -339,8 +345,8 @@ describe("Command", function() {
 					var parameters = sample.slice();
 					for(var index = 0; index < executionCount; index++) {
 						index && parameters.unshift(parameters.pop());
-						expect(command.implementation.getCall(index).thisValue).to.eql({
-							command: command,
+						expect(command.implementation.getCall(index).thisValue).to.eql(command);
+						expect(contexts[index]).to.eql({
 							occurrence: index + 1,
 							parameters: parameters
 						});

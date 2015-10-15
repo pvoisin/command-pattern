@@ -1,6 +1,6 @@
 {
   "name": "command-pattern",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Abstract implementation of the Command pattern.",
   "keywords": [
     "command",
