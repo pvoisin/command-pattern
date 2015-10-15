@@ -11,10 +11,7 @@ var Command = require("command-pattern");
 var command = new Command("welcome");
 
 command.implementation = function execute(/*parameters..., */callback) {
-	// Here, `this` is the execution context, and exposes:
-	//	- current command,
-	//	- execution occurrence,
-	//	- parameters
+	// Here, `this` is the command itself.
 
 	callback(null, "Hello!");
 };
