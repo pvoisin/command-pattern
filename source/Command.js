@@ -1,4 +1,5 @@
 var inherit = require("util").inherits;
+var Cryptography = require("crypto");
 var Observable = require("./Observable");
 
 
@@ -11,6 +12,7 @@ function Command(name) {
 		throw new Error("Invalid name!");
 	}
 
+	own.id = Cryptography.randomBytes(20).toString("hex");
 	own.name = name;
 	own.executionCount = 0;
 }
